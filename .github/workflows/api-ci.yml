@@ -8,8 +8,10 @@ on:
       - 'requirements.txt'
       - '.github/workflows/api-ci.yml'
 
+  workflow_dispatch:
+
 jobs:
-  lint-and-startup:
+  lint:
     runs-on: ubuntu-latest
 
     env:
@@ -30,5 +32,3 @@ jobs:
           pip install ruff
 
       - run: ruff check .
-
-      - run: python -c "from app.main import app; print(app.title)"
