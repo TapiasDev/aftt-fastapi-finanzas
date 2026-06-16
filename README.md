@@ -58,7 +58,13 @@ Variables disponibles:
 - `SESSION_EXPIRE_DAYS`: duracion de la sesion en dias.
 - `SESSION_SECURE_COOKIE`: usar `true` en HTTPS.
 - `SESSION_SAME_SITE`: por ejemplo `lax`.
-- `CORS_ORIGINS`: origenes permitidos separados por comas.
+- `CORS_ORIGINS`: array JSON con los origenes permitidos.
+
+Ejemplo:
+
+```env
+CORS_ORIGINS=["http://localhost:5173", "https://tu-frontend.com"]
+```
 
 Si vas a usar MongoDB local, revisa que acepte TLS. La implementacion actual crea el cliente con `tls=True`.
 
