@@ -34,11 +34,11 @@ class AuthService:
 
         return self._build_session_response(user_document)
 
-    async def sign_in(self, email: str, password: str) -> tuple[AuthSessionResponse, str]:
-        user_document = await self.users_repository.find_by_email(email)
+    async def sign_in(self, username: str, password: str) -> tuple[AuthSessionResponse, str]:
+        user_document = await self.users_repository.find_by_username(username)
 
         if not user_document or not verify_password(password, user_document["passwordHash"]):
-            raise AppError("Invalid email or password.", 401)
+            raise AppError("Invalid username or password.", 401)
 
         raw_token = create_session_token()
         token_hash = hash_session_token(raw_token)
@@ -59,6 +59,7 @@ class AuthService:
         session_token: str | None,
         new_password: str,
         confirm_password: str,
+        username: str | None,
     ) -> AuthSessionResponse:
         if not session_token:
             raise AppError("No active session was found.", 401)
@@ -77,9 +78,21 @@ class AuthService:
         if current_session.user.status != "New":
             raise AppError("Initial password change is only available for new users.", 409)
 
-        updated_user = await self.users_repository.update_password_and_status(
+        normalized_username = username.strip().lower() if username is not None else None
+
+        if normalized_username == "":
+            normalized_username = None
+
+        if normalized_username is not None:
+            existing_user = await self.users_repository.find_by_username(normalized_username)
+
+            if existing_user and existing_user["id"] != current_session.user.id:
+                raise AppError("Username is already in use.", 409)
+
+        updated_user = await self.users_repository.update_password_status_and_username(
             current_session.user.id,
             hash_password(new_password),
+            normalized_username,
         )
 
         if not updated_user:
@@ -98,7 +111,7 @@ class AuthService:
         return AuthSessionResponse(
             user={
                 "id": user_document["id"],
-                "email": user_document["email"],
+                "username": user_document["username"],
                 "status": user_document["status"],
             }
         )

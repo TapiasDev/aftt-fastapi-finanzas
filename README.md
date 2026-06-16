@@ -1,6 +1,6 @@
 # finanzas-aftt-api
 
-API backend para el planner de gastos construida con FastAPI, MongoDB y sesiones basadas en cookies HttpOnly.
+API backend para el planner de gastos construida con FastAPI, MongoDB y sesiones bearer token.
 
 ## Tecnologias
 
@@ -14,8 +14,8 @@ API backend para el planner de gastos construida con FastAPI, MongoDB y sesiones
 
 La API cubre tres bloques principales:
 
-- Autenticacion por email y password.
-- Cambio obligatorio de contrasena en el primer acceso para usuarios con estado `New`.
+- Autenticacion por `username` y password.
+- Cambio obligatorio de contrasena en el primer acceso para usuarios con estado `New`, con cambio opcional de `username`.
 - Gestion del planner financiero por usuario autenticado:
   - listado de anos disponibles,
   - detalle mensual,
@@ -53,11 +53,8 @@ Variables disponibles:
 - `APP_PORT`: puerto de arranque.
 - `MONGO_URI`: cadena de conexion de MongoDB.
 - `MONGO_DB_NAME`: nombre de la base de datos.
-- `SESSION_COOKIE_NAME`: nombre de la cookie de sesion.
 - `SESSION_SECRET_KEY`: clave usada para hashear el token de sesion.
 - `SESSION_EXPIRE_DAYS`: duracion de la sesion en dias.
-- `SESSION_SECURE_COOKIE`: usar `true` en HTTPS.
-- `SESSION_SAME_SITE`: por ejemplo `lax`.
 - `CORS_ORIGINS`: array JSON con los origenes permitidos.
 
 Ejemplo:
@@ -110,7 +107,7 @@ Usuario nuevo, obligado a cambiar contrasena en el primer login:
 
 ```json
 {
-  "email": "new.user@example.com",
+  "username": "new.user",
   "passwordHash": "pbkdf2_sha256$...",
   "status": "New"
 }
@@ -120,7 +117,7 @@ Usuario activo:
 
 ```json
 {
-  "email": "active.user@example.com",
+  "username": "active.user",
   "passwordHash": "pbkdf2_sha256$...",
   "status": "Active"
 }
@@ -128,7 +125,7 @@ Usuario activo:
 
 Notas:
 
-- El email debe guardarse en minusculas.
+- El username debe guardarse en minusculas.
 - Los estados validos son `New` y `Active`.
 - Si el documento no tiene `id`, el backend puede normalizarlo usando el valor de `_id`.
 - Un usuario `New` no puede usar el planner hasta cambiar su contrasena inicial.
@@ -163,6 +160,14 @@ Endpoints utiles una vez levantada:
 - `http://localhost:8000/docs`
 - `http://localhost:8000/redoc`
 
+## Uso del token
+
+El login devuelve un `accessToken`. Las rutas privadas esperan este header:
+
+```http
+Authorization: Bearer <accessToken>
+```
+
 ## Levantar con Docker
 
 Construir la imagen:
@@ -180,11 +185,11 @@ docker run --rm -p 8000:8000 --env-file .env finanzas-aftt-api
 ## Flujo de autenticacion
 
 1. `POST /auth/login`
-2. La API crea una cookie de sesion HttpOnly.
-3. `GET /auth/me` devuelve el usuario autenticado.
-4. Si el usuario tiene estado `New`, debe llamar a `POST /auth/change-initial-password`.
+2. La API devuelve `accessToken` y el usuario autenticado.
+3. `GET /auth/me` devuelve el usuario autenticado usando `Authorization: Bearer ...`.
+4. Si el usuario tiene estado `New`, debe llamar a `POST /auth/change-initial-password` con el token actual.
 5. Cuando el usuario queda en estado `Active`, ya puede usar los endpoints de `/planner`.
-6. `POST /auth/logout` elimina la sesion.
+6. `POST /auth/logout` elimina la sesion actual.
 
 ## Endpoints principales
 
@@ -218,11 +223,11 @@ docker run --rm -p 8000:8000 --env-file .env finanzas-aftt-api
 - Un gasto debe pertenecer al mismo mes y a la misma quincena indicada en la peticion.
 - El cierre de mes requiere confirmacion explicita con `confirmClose=true`.
 - Las sesiones se guardan en MongoDB y expiran automaticamente por indice TTL.
+- En el primer acceso, la contrasena nueva es obligatoria y el cambio de `username` es opcional.
 
 ## Notas tecnicas
 
 - La aplicacion crea indices al arrancar para `users`, `sessions` y `month_periods`.
-- La cookie de sesion usa el nombre configurado en `SESSION_COOKIE_NAME`.
 - La conexion Mongo se inicializa al levantar la app.
 - La documentacion OpenAPI esta disponible en `/docs` y `/redoc`.
 
