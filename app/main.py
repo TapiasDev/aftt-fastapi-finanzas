@@ -1,5 +1,7 @@
 import os
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +16,19 @@ from app.repositories.month_periods_repository import MonthPeriodsRepository
 from app.repositories.sessions_repository import SessionsRepository
 from app.repositories.users_repository import UsersRepository
 
+logger = logging.getLogger(__name__)
+
+ASCII_BANNER = r"""
+========================================
+    ███████╗██╗███╗   ██╗ █████╗ ███╗   ██╗███████╗ █████╗ ███████╗     █████╗ ██████╗ ██╗     █████╗ ███████╗████████╗████████╗
+    ██╔════╝██║████╗  ██║██╔══██╗████╗  ██║╚══███╔╝██╔══██╗██╔════╝    ██╔══██╗██╔══██╗██║    ██╔══██╗██╔════╝╚══██╔══╝╚══██╔══╝
+    █████╗  ██║██╔██╗ ██║███████║██╔██╗ ██║  ███╔╝ ███████║███████╗    ███████║██████╔╝██║    ███████║█████╗     ██║      ██║   
+    ██╔══╝  ██║██║╚██╗██║██╔══██║██║╚██╗██║ ███╔╝  ██╔══██║╚════██║    ██╔══██║██╔═══╝ ██║    ██╔══██║██╔══╝     ██║      ██║   
+    ██║     ██║██║ ╚████║██║  ██║██║ ╚████║███████╗██║  ██║███████║    ██║  ██║██║     ██║    ██║  ██║██║        ██║      ██║   
+    ╚═╝     ╚═╝╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝  ╚═══╝╚══════╝╚═╝  ╚═╝╚══════╝    ╚═╝  ╚═╝╚═╝     ╚═╝    ╚═╝  ╚═╝╚═╝        ╚═╝      ╚═╝                                                                                                                           
+========================================
+""".strip("\n")
+
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
@@ -24,6 +39,21 @@ async def lifespan(_: FastAPI):
         await UsersRepository().ensure_indexes()
         await SessionsRepository().ensure_indexes()
         await MonthPeriodsRepository().ensure_indexes()
+
+    logger.info("\n%s", ASCII_BANNER)
+    logger.info(
+        "\n".join(
+            [
+                "========================================",
+                "Estado: API INICIADA CORRECTAMENTE",
+                f"Fecha UTC: {datetime.now(UTC).isoformat()}",
+                f"Entorno: {os.getenv('APP_ENV', 'development')}",
+                f"Despliegue: {os.getenv('ENVIRONMENT', 'local')}",
+                f"Base de datos: {os.getenv('MONGO_DB_NAME', 'finanzas_aftt')}",
+                "========================================",
+            ]
+        )
+    )
 
     yield
 
