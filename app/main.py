@@ -16,7 +16,7 @@ from app.repositories.month_periods_repository import MonthPeriodsRepository
 from app.repositories.sessions_repository import SessionsRepository
 from app.repositories.users_repository import UsersRepository
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 ASCII_BANNER = r"""
 ========================================

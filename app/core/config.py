@@ -20,13 +20,13 @@ class Settings(BaseSettings):
     session_secure_cookie: bool = False
     session_same_site: str = "lax"
 
-    cors_origins: str = "http://localhost:5173"
+    cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     @property
     def cors_origins_list(self) -> list[str]:
-        return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]
+        return [origin.strip() for origin in self.cors_origins if origin.strip()]
 
 
 @lru_cache
