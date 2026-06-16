@@ -5,6 +5,7 @@ from app.schemas.auth import AuthSessionResponse
 from app.schemas.planner import (
     CloseMonthRequest,
     CreateExpenseRequest,
+    DeleteExpenseRequest,
     FortnightPeriodResponse,
     MonthDetailResponse,
     SaveFortnightIncomeRequest,
@@ -135,6 +136,22 @@ async def update_expense(
     planner_service: PlannerService = Depends(get_planner_service),
 ) -> MonthDetailResponse:
     return await planner_service.update_expense(session.user.id, expense_id, payload.model_dump())
+
+
+@router.delete(
+    "/expenses/{expense_id}",
+    response_model=MonthDetailResponse,
+    summary="Delete expense",
+    description="Deletes an expense and optionally affects future recurring instances.",
+    responses=PLANNER_ERROR_RESPONSES,
+)
+async def delete_expense(
+    expense_id: str,
+    payload: DeleteExpenseRequest,
+    session: AuthSessionResponse = Depends(get_current_active_session),
+    planner_service: PlannerService = Depends(get_planner_service),
+) -> MonthDetailResponse:
+    return await planner_service.delete_expense(session.user.id, expense_id, payload.model_dump())
 
 
 @router.patch(

@@ -12,6 +12,7 @@ from app.api.routers.planner import router as planner_router
 from app.core.config import get_settings
 from app.core.database import close_mongo_connection, connect_to_mongo
 from app.core.exceptions import AppError
+from app.repositories.expense_recurrences_repository import ExpenseRecurrencesRepository
 from app.repositories.month_periods_repository import MonthPeriodsRepository
 from app.repositories.sessions_repository import SessionsRepository
 from app.repositories.users_repository import UsersRepository
@@ -39,6 +40,7 @@ async def lifespan(_: FastAPI):
         await UsersRepository().ensure_indexes()
         await SessionsRepository().ensure_indexes()
         await MonthPeriodsRepository().ensure_indexes()
+        await ExpenseRecurrencesRepository().ensure_indexes()
 
     logger.info("\n%s", ASCII_BANNER)
     logger.info(

@@ -21,10 +21,12 @@ La API cubre tres bloques principales:
   - detalle mensual,
   - ingresos por quincena,
   - alta y edicion de gastos,
+  - creacion de gastos recurrentes por mes o hacia futuro,
+  - eliminacion y edicion de instancias actuales o futuras de una recurrencia,
   - marcar gastos como pagados o pendientes,
   - cierre de mes.
 
-Cuando un usuario entra por primera vez en el planner, el backend genera automaticamente la estructura base de datos para el ano actual y el siguiente, con 12 meses y 2 quincenas por mes.
+El backend asegura que exista al menos el ano actual. Los anos adicionales se crean bajo demanda cuando el usuario navega a un ano anterior o siguiente.
 
 ## Requisitos
 
@@ -214,13 +216,17 @@ docker run --rm -p 8000:8000 --env-file .env finanzas-aftt-api
 - `POST /planner/expenses`
 - `PATCH /planner/expenses/{expense_id}/status`
 - `PUT /planner/expenses/{expense_id}`
+- `DELETE /planner/expenses/{expense_id}`
 - `PATCH /planner/months/{month_id}/close`
 
 ## Reglas funcionales importantes
 
 - Los endpoints del planner solo aceptan usuarios autenticados con estado `Active`.
+- El ano actual siempre debe existir para cada usuario y los demas anos se crean bajo demanda.
 - Los meses cerrados no permiten cambios de ingresos ni de gastos.
 - Un gasto debe pertenecer al mismo mes y a la misma quincena indicada en la peticion.
+- Un gasto puede crearse como unico, en ambas quincenas del mes actual, o como recurrencia hacia meses futuros.
+- Las recurrencias pueden actualizarse o eliminarse solo en la instancia actual, solo en futuras o en actual y futuras.
 - El cierre de mes requiere confirmacion explicita con `confirmClose=true`.
 - Las sesiones se guardan en MongoDB y expiran automaticamente por indice TTL.
 - En el primer acceso, la contrasena nueva es obligatoria y el cambio de `username` es opcional.
