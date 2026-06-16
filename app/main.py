@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -16,12 +17,18 @@ from app.repositories.users_repository import UsersRepository
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    await connect_to_mongo()
-    await UsersRepository().ensure_indexes()
-    await SessionsRepository().ensure_indexes()
-    await MonthPeriodsRepository().ensure_indexes()
+    is_ci = os.getenv("GITHUB_ACTIONS") == "true" or os.getenv("ENVIRONMENT") == "ci"
+
+    if not is_ci:
+        await connect_to_mongo()
+        await UsersRepository().ensure_indexes()
+        await SessionsRepository().ensure_indexes()
+        await MonthPeriodsRepository().ensure_indexes()
+
     yield
-    await close_mongo_connection()
+
+    if not is_ci:
+        await close_mongo_connection()
 
 
 settings = get_settings()
