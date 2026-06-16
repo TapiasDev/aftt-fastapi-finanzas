@@ -18,21 +18,18 @@ class MonthPeriodsRepository:
         await self.collection.create_index([("id", ASCENDING)], unique=True)
         await self.collection.create_index([("userId", ASCENDING), ("year", ASCENDING)])
 
-    async def ensure_default_data(self, user_id: str) -> None:
-        existing_count = await self.collection.count_documents({"userId": user_id}, limit=1)
+    async def ensure_year_data(self, user_id: str, year: int) -> list[dict[str, Any]]:
+        existing_months = await self.list_year_months(user_id, year)
 
-        if existing_count > 0:
-            return
+        if existing_months:
+            return existing_months
 
-        current_year = utc_now().year
-        documents = []
-
-        for year in (current_year, current_year + 1):
-            for month_number in range(1, 13):
-                documents.append(create_month_aggregate(user_id, year, month_number))
+        documents = [create_month_aggregate(user_id, year, month_number) for month_number in range(1, 13)]
 
         if documents:
             await self.collection.insert_many(documents)
+
+        return await self.list_year_months(user_id, year)
 
     async def list_available_years(self, user_id: str) -> list[int]:
         return await self.collection.distinct("year", {"userId": user_id})
@@ -42,6 +39,13 @@ class MonthPeriodsRepository:
             {"userId": user_id, "year": year},
             {"_id": 0},
         ).sort("monthNumber", ASCENDING)
+        return await cursor.to_list(length=None)
+
+    async def list_months_from_year(self, user_id: str, start_year: int) -> list[dict[str, Any]]:
+        cursor = self.collection.find(
+            {"userId": user_id, "year": {"$gte": start_year}},
+            {"_id": 0},
+        ).sort([("year", ASCENDING), ("monthNumber", ASCENDING)])
         return await cursor.to_list(length=None)
 
     async def find_month(self, user_id: str, year: int, month_number: int) -> dict[str, Any] | None:
