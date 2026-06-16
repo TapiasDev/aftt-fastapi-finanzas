@@ -14,7 +14,7 @@ Colección: `users`
 
 ```json
 {
-  "email": "new.user@example.com",
+  "username": "new.user",
   "passwordHash": "pbkdf2_sha256$...",
   "status": "New"
 }
@@ -26,7 +26,7 @@ Colección: `users`
 
 ```json
 {
-  "email": "active.user@example.com",
+  "username": "active.user",
   "passwordHash": "pbkdf2_sha256$...",
   "status": "Active"
 }
@@ -35,6 +35,7 @@ Colección: `users`
 ## Notas
 
 - El backend puede completar el campo `id` automáticamente en el primer login si el documento solo tiene `_id`.
-- El email debe quedar en minúsculas.
+- El username debe quedar en minúsculas.
 - Los únicos estados válidos son `New` y `Active`.
 - En el primer acceso de un usuario `New`, la API obligará el cambio de contraseña antes de entrar al planner.
+- En ese mismo paso el usuario puede cambiar su `username`, pero no es obligatorio.

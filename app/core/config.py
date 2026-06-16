@@ -14,11 +14,8 @@ class Settings(BaseSettings):
     mongo_uri: str = "mongodb://localhost:27017"
     mongo_db_name: str = "finanzas_aftt"
 
-    session_cookie_name: str = "finanzas_aftt_session"
     session_secret_key: str = Field(min_length=16)
     session_expire_days: int = 7
-    session_secure_cookie: bool = False
-    session_same_site: str = "lax"
 
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:5173"])
 

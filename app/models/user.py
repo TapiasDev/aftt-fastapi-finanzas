@@ -1,8 +1,8 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class UserDocument(BaseModel):
     id: str
-    email: EmailStr
+    username: str
     passwordHash: str
     status: str

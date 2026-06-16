@@ -1,15 +1,13 @@
 from fastapi import Depends
-from fastapi.security import APIKeyCookie
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.core.config import get_settings
 from app.core.exceptions import AppError
 from app.schemas.auth import AuthSessionResponse
 from app.services.auth_service import AuthService
 
-session_cookie_scheme = APIKeyCookie(
-    name=get_settings().session_cookie_name,
+bearer_scheme = HTTPBearer(
     auto_error=False,
-    description="Cookie de sesión HttpOnly creada por `POST /auth/login`.",
+    description="Bearer token returned by `POST /auth/login`.",
 )
 
 
@@ -19,14 +17,23 @@ def get_auth_service() -> AuthService:
 
 async def get_current_session(
     auth_service: AuthService = Depends(get_auth_service),
-    session_token: str | None = Depends(session_cookie_scheme),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> AuthSessionResponse:
-    session = await auth_service.get_current_session(session_token)
+    session = await auth_service.get_current_session(credentials.credentials if credentials else None)
 
     if not session:
         raise AppError("No active session.", 401)
 
     return session
+
+
+async def get_current_session_token(
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> str:
+    if not credentials:
+        raise AppError("No active session.", 401)
+
+    return credentials.credentials
 
 
 async def get_current_active_session(
