@@ -24,8 +24,6 @@ def create_month_aggregate(user_id: str, year: int, month_number: int) -> dict:
         "year": year,
         "monthNumber": month_number,
         "monthName": get_month_name(month_number),
-        "status": "Open",
-        "closedAt": None,
         "fortnights": [
             {
                 "id": first_fortnight_id,

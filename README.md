@@ -23,8 +23,7 @@ La API cubre tres bloques principales:
   - alta y edicion de gastos,
   - creacion de gastos recurrentes por mes o hacia futuro,
   - eliminacion y edicion de instancias actuales o futuras de una recurrencia,
-  - marcar gastos como pagados o pendientes,
-  - cierre de mes.
+  - marcar gastos como pagados o pendientes.
 
 El backend asegura que exista al menos el ano actual. Los anos adicionales se crean bajo demanda cuando el usuario navega a un ano anterior o siguiente.
 
@@ -217,7 +216,6 @@ docker run --rm -p 8000:8000 --env-file .env finanzas-aftt-api
 - `PATCH /planner/expenses/{expense_id}/status`
 - `PUT /planner/expenses/{expense_id}`
 - `DELETE /planner/expenses/{expense_id}`
-- `PATCH /planner/months/{month_id}/close`
 
 ## Reglas funcionales importantes
 
@@ -227,7 +225,6 @@ docker run --rm -p 8000:8000 --env-file .env finanzas-aftt-api
 - Un gasto debe pertenecer al mismo mes y a la misma quincena indicada en la peticion.
 - Un gasto puede crearse como unico, en ambas quincenas del mes actual, o como recurrencia hacia meses futuros.
 - Las recurrencias pueden actualizarse o eliminarse solo en la instancia actual, solo en futuras o en actual y futuras.
-- El cierre de mes requiere confirmacion explicita con `confirmClose=true`.
 - Las sesiones se guardan en MongoDB y expiran automaticamente por indice TTL.
 - En el primer acceso, la contrasena nueva es obligatoria y el cambio de `username` es opcional.
 

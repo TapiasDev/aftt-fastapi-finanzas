@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends
 from app.api.deps import get_current_active_session
 from app.schemas.auth import AuthSessionResponse
 from app.schemas.planner import (
-    CloseMonthRequest,
     CreateExpenseRequest,
     DeleteExpenseRequest,
     FortnightPeriodResponse,
@@ -153,18 +152,3 @@ async def delete_expense(
 ) -> MonthDetailResponse:
     return await planner_service.delete_expense(session.user.id, expense_id, payload.model_dump())
 
-
-@router.patch(
-    "/months/{month_id}/close",
-    response_model=MonthDetailResponse,
-    summary="Close month",
-    description="Closes an open month and returns the updated month in readonly mode.",
-    responses=PLANNER_ERROR_RESPONSES,
-)
-async def close_month(
-    month_id: str,
-    payload: CloseMonthRequest,
-    session: AuthSessionResponse = Depends(get_current_active_session),
-    planner_service: PlannerService = Depends(get_planner_service),
-) -> MonthDetailResponse:
-    return await planner_service.close_month(session.user.id, month_id, payload.confirmClose)
