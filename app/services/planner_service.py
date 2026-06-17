@@ -37,9 +37,6 @@ class PlannerService:
         if not month_document:
             raise AppError(f"Fortnight {fortnight_id} was not found.", 404)
 
-        if month_document["status"] == "Closed":
-            raise AppError("Income cannot be updated for a closed month.", 409)
-
         mutable_month = deepcopy(month_document)
         target_fortnight = next(item for item in mutable_month["fortnights"] if item["id"] == fortnight_id)
         target_fortnight["incomeAmount"] = income_amount
@@ -56,7 +53,6 @@ class PlannerService:
             raise AppError(f"Fortnight {payload['fortnightPeriodId']} was not found.", 404)
 
         mutable_month = deepcopy(month_document)
-        self._ensure_month_is_open(mutable_month)
 
         selected_fortnight = next(item for item in mutable_month["fortnights"] if item["id"] == payload["fortnightPeriodId"])
         self._validate_expense_payload(mutable_month, selected_fortnight, payload)
@@ -95,7 +91,6 @@ class PlannerService:
             raise AppError(f"Expense {expense_id} was not found.", 404)
 
         mutable_month = deepcopy(month_document)
-        self._ensure_month_is_open(mutable_month)
 
         expense = next(item for item in mutable_month["expenses"] if item["id"] == expense_id)
         apply_scope = (payload.get("applyScope") or {}).get("scope", "current")
@@ -121,7 +116,6 @@ class PlannerService:
             raise AppError(f"Expense {expense_id} was not found.", 404)
 
         mutable_month = deepcopy(month_document)
-        self._ensure_month_is_open(mutable_month)
         expense = next(item for item in mutable_month["expenses"] if item["id"] == expense_id)
         apply_scope = (payload.get("applyScope") or {}).get("scope", "current")
 
@@ -139,31 +133,10 @@ class PlannerService:
             raise AppError(f"Expense {expense_id} was not found.", 404)
 
         mutable_month = deepcopy(month_document)
-        self._ensure_month_is_open(mutable_month)
 
         expense = next(item for item in mutable_month["expenses"] if item["id"] == expense_id)
         expense["status"] = "Paid" if is_paid else "Pending"
         expense["paidAt"] = utc_now().isoformat() if is_paid else None
-
-        updated_month = await self.month_periods_repository.replace_month(user_id, mutable_month["id"], mutable_month)
-        return self._to_month_detail_or_error(updated_month, mutable_month["id"])
-
-    async def close_month(self, user_id: str, month_id: str, confirm_close: bool) -> MonthDetailResponse:
-        if not confirm_close:
-            raise AppError("Closing a month requires confirmation.", 400)
-
-        month_document = await self.month_periods_repository.find_month_by_id(user_id, month_id)
-
-        if not month_document:
-            raise AppError(f"Month {month_id} was not found.", 404)
-
-        mutable_month = deepcopy(month_document)
-
-        if mutable_month["status"] == "Closed":
-            raise AppError("Only open months can be closed.", 409)
-
-        mutable_month["status"] = "Closed"
-        mutable_month["closedAt"] = utc_now().isoformat()
 
         updated_month = await self.month_periods_repository.replace_month(user_id, mutable_month["id"], mutable_month)
         return self._to_month_detail_or_error(updated_month, mutable_month["id"])
@@ -458,11 +431,6 @@ class PlannerService:
         return next(item for item in month_document["fortnights"] if item["type"] == recurrence_updates["anchorFortnightType"])
 
     @staticmethod
-    def _ensure_month_is_open(month_document: dict) -> None:
-        if month_document["status"] == "Closed":
-            raise AppError("Operation is not allowed for a closed month.", 409)
-
-    @staticmethod
     def _validate_expense_payload(month_document: dict, fortnight: dict, payload: dict) -> None:
         if not payload["name"].strip():
             raise AppError("Expense name is required.", 400)
@@ -496,8 +464,6 @@ class PlannerService:
             "year": month_document["year"],
             "monthNumber": month_document["monthNumber"],
             "monthName": month_document["monthName"],
-            "status": month_document["status"],
-            "closedAt": month_document["closedAt"],
         }
 
     @classmethod

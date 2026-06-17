@@ -36,8 +36,6 @@ class MonthSummaryResponse(BaseModel):
     year: int
     monthNumber: int
     monthName: str
-    status: str
-    closedAt: str | None
 
 
 class YearDataResponse(BaseModel):
@@ -77,7 +75,3 @@ class UpdateExpenseRequest(BaseModel):
 
 class DeleteExpenseRequest(BaseModel):
     applyScope: ExpenseApplyScopePayload | None = None
-
-
-class CloseMonthRequest(BaseModel):
-    confirmClose: bool

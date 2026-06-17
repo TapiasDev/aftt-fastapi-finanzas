@@ -7,7 +7,5 @@ class MonthPeriodDocument(BaseModel):
     year: int
     monthNumber: int
     monthName: str
-    status: str
-    closedAt: str | None
     fortnights: list[dict]
     expenses: list[dict]
