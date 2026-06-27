@@ -11,7 +11,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  lint:
+  hello:
     runs-on: ubuntu-latest
 
     env:
@@ -20,15 +20,11 @@ jobs:
       CORS_ORIGINS: http://localhost:5173
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Saludar
+        run: echo "Hola desde GitHub Actions"
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+      - name: Ver fecha del runner
+        run: date
 
-      - run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install ruff
-
-      - run: ruff check .
+      - name: Ver archivos disponibles
+        run: ls -la
