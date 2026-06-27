@@ -28,3 +28,11 @@ jobs:
 
       - name: Ver archivos disponibles
         run: ls -la
+  repo-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar codigo del repositorio
+        uses: actions/checkout@v6
+
+      - name: Ver archivos disponibles
+        run: ls -la
